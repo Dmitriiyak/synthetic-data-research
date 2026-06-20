@@ -1,0 +1,25 @@
+{
+  "project_name": "Synthetic Images for Landmark Classification",
+
+  "generator_model": "Juggernaut XL v9",
+  "image_resolution": "704x704",
+  "steps": 25,
+  "seed_strategy": "random (-1)",
+
+  "train_prompts_per_class": 10,
+  "test_prompts_per_class": 2,
+
+  "train_images_per_prompt": 30,
+  "test_images_per_prompt": 30,
+
+  "classes": [
+    "burj_khalifa",
+    "chichen_itza",
+    "christ_the_redeemer",
+    "eiffel_tower",
+    "great_wall_of_china",
+    "pyramids_of_giza",
+    "roman_colosseum",
+    "statue_of_liberty"
+  ]
+}
