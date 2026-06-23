@@ -2,6 +2,11 @@
 dataset_real/
 dataset_synthetic/
 
+# Models
+models/
+*.pth
+results/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
