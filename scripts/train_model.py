@@ -2,6 +2,7 @@ import os
 import random
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 
@@ -32,6 +33,8 @@ if torch.cuda.is_available():
 # ==================================================
 # CONFIG
 # ==================================================
+
+EXPERIMENT_NAME = "e1"
 
 TRAIN_DIR = "dataset_real/train"
 VAL_DIR = "dataset_real/val"
@@ -270,26 +273,42 @@ for epoch in range(NUM_EPOCHS):
 
         torch.save(
             model.state_dict(),
-            "models/best_model.pth"
+            f"models/{EXPERIMENT_NAME}_best_model.pth"
         )
 
         print("Best model saved.")
 
-with open("results/training_history.txt", "w") as f:
 
+# ==================================================
+# SAVE HISTORY CSV
+# ==================================================
+
+history_df = pd.DataFrame({
+    "epoch": range(1, NUM_EPOCHS + 1),
+    "train_loss": history["train_loss"],
+    "train_acc": history["train_acc"],
+    "val_loss": history["val_loss"],
+    "val_acc": history["val_acc"]
+})
+
+history_df.to_csv(
+    f"results/{EXPERIMENT_NAME}_history.csv",
+    index=False
+)
+
+
+# ==================================================
+# SAVE SUMMARY TXT
+# ==================================================
+
+with open(f"results/{EXPERIMENT_NAME}_summary.txt", "w") as f:
+
+    f.write(f"Experiment: {EXPERIMENT_NAME}\n")
     f.write(f"Best Epoch: {best_epoch}\n")
-    f.write(f"Best Validation Accuracy: {best_val_acc:.2f}%\n\n")
+    f.write(f"Best Validation Accuracy: {best_val_acc:.2f}%\n")
 
-    for i in range(NUM_EPOCHS):
-
-        f.write(
-            f"Epoch {i+1}: "
-            f"Train Loss={history['train_loss'][i]:.4f}, "
-            f"Train Acc={history['train_acc'][i]:.2f}, "
-            f"Val Loss={history['val_loss'][i]:.4f}, "
-            f"Val Acc={history['val_acc'][i]:.2f}\n"
-        )
 
 print("\nTraining completed.")
 print(f"Best Epoch: {best_epoch}")
 print(f"Best Validation Accuracy: {best_val_acc:.2f}%")
+
