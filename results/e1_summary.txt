@@ -1,0 +1,3 @@
+Experiment: e1
+Best Epoch: 6
+Best Validation Accuracy: 99.58%

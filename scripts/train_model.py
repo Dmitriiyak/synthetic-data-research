@@ -35,7 +35,7 @@ if torch.cuda.is_available():
 # CONFIG
 # ==================================================
 
-EXPERIMENT_NAME = "e1"
+EXPERIMENT_NAME = "e1" # for change experiment you need just change digit (1, 2, 3, 4, 5)
 
 TRAIN_CSV = f"metadata/{EXPERIMENT_NAME}_train.csv"
 
