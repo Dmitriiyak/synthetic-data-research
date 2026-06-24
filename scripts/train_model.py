@@ -3,16 +3,18 @@ import random
 
 import numpy as np
 import pandas as pd
+from PIL import Image
+
 import torch
 import torch.nn as nn
 
-from torchvision import datasets, transforms
+from torchvision import transforms
 from torchvision.models import (
     efficientnet_b0,
     EfficientNet_B0_Weights
 )
 
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 
 
 # ==================================================
@@ -26,7 +28,6 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 if torch.cuda.is_available():
-    torch.cuda.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
 
 
@@ -36,7 +37,8 @@ if torch.cuda.is_available():
 
 EXPERIMENT_NAME = "e1"
 
-TRAIN_DIR = "dataset_real/train"
+TRAIN_CSV = f"metadata/{EXPERIMENT_NAME}_train.csv"
+
 VAL_DIR = "dataset_real/val"
 
 NUM_CLASSES = 8
@@ -85,15 +87,63 @@ val_transforms = transforms.Compose([
 
 
 # ==================================================
+# CSV DATASET
+# ==================================================
+
+class CSVImageDataset(Dataset):
+
+    def __init__(self, csv_file, transform=None):
+
+        self.df = pd.read_csv(csv_file)
+
+        self.transform = transform
+
+        self.classes = sorted(
+            self.df["class_name"].unique()
+        )
+
+        self.class_to_idx = {
+            class_name: idx
+            for idx, class_name
+            in enumerate(self.classes)
+        }
+
+    def __len__(self):
+
+        return len(self.df)
+
+    def __getitem__(self, idx):
+
+        row = self.df.iloc[idx]
+
+        image_path = row["filepath"]
+
+        class_name = row["class_name"]
+
+        image = Image.open(
+            image_path
+        ).convert("RGB")
+
+        label = self.class_to_idx[class_name]
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
+
+
+# ==================================================
 # DATASETS
 # ==================================================
 
-train_dataset = datasets.ImageFolder(
-    TRAIN_DIR,
+train_dataset = CSVImageDataset(
+    TRAIN_CSV,
     transform=train_transforms
 )
 
-val_dataset = datasets.ImageFolder(
+from torchvision.datasets import ImageFolder
+
+val_dataset = ImageFolder(
     VAL_DIR,
     transform=val_transforms
 )
@@ -126,11 +176,13 @@ val_loader = DataLoader(
 
 weights = EfficientNet_B0_Weights.DEFAULT
 
-model = efficientnet_b0(weights=weights)
+model = efficientnet_b0(
+    weights=weights
+)
 
 model.classifier[1] = nn.Linear(
-    in_features=1280,
-    out_features=NUM_CLASSES
+    1280,
+    NUM_CLASSES
 )
 
 model = model.to(DEVICE)
@@ -149,10 +201,10 @@ optimizer = torch.optim.AdamW(
 
 
 # ==================================================
-# TRAIN FUNCTION
+# TRAIN
 # ==================================================
 
-def train_one_epoch(model, loader, criterion, optimizer, device):
+def train_one_epoch():
 
     model.train()
 
@@ -160,17 +212,22 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     correct = 0
     total = 0
 
-    for images, labels in loader:
+    for images, labels in train_loader:
 
-        images = images.to(device)
-        labels = labels.to(device)
+        images = images.to(DEVICE)
+        labels = labels.to(DEVICE)
 
         outputs = model(images)
 
-        loss = criterion(outputs, labels)
+        loss = criterion(
+            outputs,
+            labels
+        )
 
         optimizer.zero_grad()
+
         loss.backward()
+
         optimizer.step()
 
         running_loss += loss.item()
@@ -178,19 +235,22 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         _, predicted = outputs.max(1)
 
         total += labels.size(0)
-        correct += predicted.eq(labels).sum().item()
 
-    epoch_loss = running_loss / len(loader)
-    epoch_acc = 100.0 * correct / total
+        correct += (
+            predicted == labels
+        ).sum().item()
 
-    return epoch_loss, epoch_acc
+    return (
+        running_loss / len(train_loader),
+        100 * correct / total
+    )
 
 
 # ==================================================
-# VALIDATION FUNCTION
+# VALIDATE
 # ==================================================
 
-def validate(model, loader, criterion, device):
+def validate():
 
     model.eval()
 
@@ -200,66 +260,59 @@ def validate(model, loader, criterion, device):
 
     with torch.no_grad():
 
-        for images, labels in loader:
+        for images, labels in val_loader:
 
-            images = images.to(device)
-            labels = labels.to(device)
+            images = images.to(DEVICE)
+            labels = labels.to(DEVICE)
 
             outputs = model(images)
 
-            loss = criterion(outputs, labels)
+            loss = criterion(
+                outputs,
+                labels
+            )
 
             running_loss += loss.item()
 
             _, predicted = outputs.max(1)
 
             total += labels.size(0)
-            correct += predicted.eq(labels).sum().item()
 
-    epoch_loss = running_loss / len(loader)
-    epoch_acc = 100.0 * correct / total
+            correct += (
+                predicted == labels
+            ).sum().item()
 
-    return epoch_loss, epoch_acc
+    return (
+        running_loss / len(val_loader),
+        100 * correct / total
+    )
 
 
 # ==================================================
 # TRAINING LOOP
 # ==================================================
 
-history = {
-    "train_loss": [],
-    "train_acc": [],
-    "val_loss": [],
-    "val_acc": []
-}
+history = []
 
 best_val_acc = 0.0
 best_epoch = 0
 
 for epoch in range(NUM_EPOCHS):
 
-    train_loss, train_acc = train_one_epoch(
-        model,
-        train_loader,
-        criterion,
-        optimizer,
-        DEVICE
-    )
+    train_loss, train_acc = train_one_epoch()
 
-    val_loss, val_acc = validate(
-        model,
-        val_loader,
-        criterion,
-        DEVICE
-    )
+    val_loss, val_acc = validate()
 
-    history["train_loss"].append(train_loss)
-    history["train_acc"].append(train_acc)
-    history["val_loss"].append(val_loss)
-    history["val_acc"].append(val_acc)
+    history.append({
+        "epoch": epoch + 1,
+        "train_loss": train_loss,
+        "train_acc": train_acc,
+        "val_loss": val_loss,
+        "val_acc": val_acc
+    })
 
     print(
-        f"Epoch {epoch + 1}/{NUM_EPOCHS} | "
+        f"Epoch {epoch+1}/{NUM_EPOCHS} | "
         f"Train Loss: {train_loss:.4f} | "
         f"Train Acc: {train_acc:.2f}% | "
         f"Val Loss: {val_loss:.4f} | "
@@ -280,35 +333,38 @@ for epoch in range(NUM_EPOCHS):
 
 
 # ==================================================
-# SAVE HISTORY CSV
+# SAVE RESULTS
 # ==================================================
 
-history_df = pd.DataFrame({
-    "epoch": range(1, NUM_EPOCHS + 1),
-    "train_loss": history["train_loss"],
-    "train_acc": history["train_acc"],
-    "val_loss": history["val_loss"],
-    "val_acc": history["val_acc"]
-})
+history_df = pd.DataFrame(history)
 
 history_df.to_csv(
     f"results/{EXPERIMENT_NAME}_history.csv",
     index=False
 )
 
+with open(
+    f"results/{EXPERIMENT_NAME}_summary.txt",
+    "w"
+) as f:
 
-# ==================================================
-# SAVE SUMMARY TXT
-# ==================================================
+    f.write(
+        f"Experiment: {EXPERIMENT_NAME}\n"
+    )
 
-with open(f"results/{EXPERIMENT_NAME}_summary.txt", "w") as f:
+    f.write(
+        f"Best Epoch: {best_epoch}\n"
+    )
 
-    f.write(f"Experiment: {EXPERIMENT_NAME}\n")
-    f.write(f"Best Epoch: {best_epoch}\n")
-    f.write(f"Best Validation Accuracy: {best_val_acc:.2f}%\n")
-
+    f.write(
+        f"Best Validation Accuracy: "
+        f"{best_val_acc:.2f}%\n"
+    )
 
 print("\nTraining completed.")
 print(f"Best Epoch: {best_epoch}")
-print(f"Best Validation Accuracy: {best_val_acc:.2f}%")
+print(
+    f"Best Validation Accuracy: "
+    f"{best_val_acc:.2f}%"
+)
 
