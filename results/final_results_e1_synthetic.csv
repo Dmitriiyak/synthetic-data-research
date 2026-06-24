@@ -1,0 +1,2 @@
+model,test_dataset,accuracy,precision,recall,f1_score
+e1,synthetic,0.99375,0.994047619047619,0.99375,0.9937460913070668
