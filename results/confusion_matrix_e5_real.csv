@@ -1,9 +1,0 @@
-,burj_khalifa,chichen_itza,christ_the_reedemer,eiffel_tower,great_wall_of_china,pyramids_of_giza,roman_colosseum,statue_of_liberty
-burj_khalifa,23,0,3,2,1,0,1,0
-chichen_itza,0,27,0,0,3,0,0,0
-christ_the_reedemer,0,0,26,0,0,0,0,4
-eiffel_tower,1,0,3,26,0,0,0,0
-great_wall_of_china,0,1,4,0,25,0,0,0
-pyramids_of_giza,0,3,1,0,0,25,0,1
-roman_colosseum,0,0,0,0,1,0,29,0
-statue_of_liberty,0,0,0,2,0,0,0,28

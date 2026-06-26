@@ -1,0 +1,6 @@
+experiment,real_train_pct,synthetic_train_pct,val_accuracy,real_test_accuracy,real_precision,real_recall,real_f1,synthetic_test_accuracy,synthetic_precision,synthetic_recall,synthetic_f1
+e1,100,0,99.58,98.75,98.82,98.75,98.75,99.38,99.40,99.38,99.37
+e2,75,25,99.58,98.33,98.39,98.33,98.33,99.79,99.80,99.79,99.79
+e3,50,50,98.75,97.50,97.59,97.50,97.47,99.79,99.80,99.79,99.79
+e4,25,75,99.17,98.33,98.46,98.33,98.33,99.79,99.80,99.79,99.79
+e5,0,100,89.58,87.08,88.09,87.08,87.22,97.92,98.13,97.92,97.88
