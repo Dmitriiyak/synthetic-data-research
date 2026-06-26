@@ -8,7 +8,54 @@
 
 Все эти вопросы в итоге вылились в исследование, которое вы сейчас читаете.
 
-Original dataset_real: https://www.kaggle.com/datasets/balabaskar/wonders-of-the-world-image-classification
-Final version of dataset_real: https://drive.google.com/drive/folders/11YW_KtlKP1D3d573jAoHfc7VIA0A4fya?usp=drive_link
-dataset_synthetic (not final version): https://drive.google.com/drive/folders/1c44V4vUV0VAcN55aXytl7Jpp0mgrDWec?usp=drive_link
-Models (.pth format): https://drive.google.com/drive/folders/1GEVB_Aca4CIIrR2jtpXbsZpjqSJFDK1S?usp=drive_link
+## Структура репозитория
+
+### `metadata/`
+
+* **eX_train.csv** — информация о составе обучающей выборки для эксперимента **X** (какие изображения из `dataset_real` и `dataset_synthetic` вошли в эксперимент).
+* **experiment_config.json** — параметры генерации синтетических изображений и используемая генеративная модель.
+* **prompt_templates.csv** — промпты, использованные для генерации синтетических изображений. Для каждого промпта в `dataset_synthetic` было сгенерировано ровно **30 изображений**.
+
+---
+
+### `results/`
+
+* **summary.csv** — итоговые результаты всех экспериментов. Содержит значения Accuracy, Precision, Recall и F1-score для оценки моделей на реальных и синтетических тестовых выборках.
+* **accuracy_vs_synthetic_ratio.png** — график зависимости точности классификации от доли синтетических изображений в обучающей выборке.
+* **domain_gap.png** — график, показывающий разницу между качеством модели на реальной и синтетической тестовых выборках (Domain Gap).
+
+---
+
+### `scripts/`
+
+* **analysis.py** — строит итоговые графики исследования и сохраняет их в папку `results/`.
+* **create_experiment_datasets.py** — формирует файлы `eX_train.csv`, описывающие состав обучающей выборки для каждого эксперимента.
+* **evaluate_model.py** — оценивает обученные модели на тестовых выборках и вычисляет метрики Accuracy, Precision, Recall и F1-score.
+* **prompt_generator.py** — генерирует файл `prompt_templates.csv`. Поскольку генерация промптов происходит случайным образом, для полного воспроизведения исследования необходимо использовать именно сохранённый файл `prompt_templates.csv`.
+* **train_model.py** — обучает модель EfficientNet-B0. Во всех экспериментах использовалось **10 эпох обучения**.
+
+---
+
+### `models/`
+
+Обученные модели (в формате `.pth`), использованные в исследовании. В репозиторий не включены из-за большого размера.
+
+Скачать можно **[здесь](https://drive.google.com/drive/folders/1GEVB_Aca4CIIrR2jtpXbsZpjqSJFDK1S?usp=drive_link)**.
+
+---
+
+### `dataset_real/`
+
+Реальные изображения, использованные в исследовании.
+
+* **Оригинальный датасет:** [Kaggle](https://www.kaggle.com/datasets/balabaskar/wonders-of-the-world-image-classification)
+* **Версия, использованная в исследовании:** [Google Drive](https://drive.google.com/drive/folders/11YW_KtlKP1D3d573jAoHfc7VIA0A4fya?usp=drive_link)
+
+---
+
+### `dataset_synthetic/`
+
+Синтетические изображения, сгенерированные по промптам из `prompt_templates.csv`.
+
+Скачать можно **[здесь](https://drive.google.com/drive/folders/1c44V4vUV0VAcN55aXytl7Jpp0mgrDWec?usp=drive_link)**.
+

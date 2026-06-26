@@ -1,13 +1,12 @@
 """
 Analysis of experimental results.
 
-Generates:
-    figures/
-        accuracy_vs_synthetic_ratio.png
-        domain_gap.png
-
 Reads:
     results/summary.csv
+
+Generates:
+    results/accuracy_vs_synthetic_ratio.png
+    results/domain_gap.png
 """
 
 from pathlib import Path
@@ -23,9 +22,6 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 RESULTS_DIR = PROJECT_ROOT / "results"
-FIGURES_DIR = PROJECT_ROOT / "figures"
-
-FIGURES_DIR.mkdir(exist_ok=True)
 
 summary = pd.read_csv(RESULTS_DIR / "summary.csv")
 
@@ -45,7 +41,7 @@ domain_gap = synthetic_acc - real_acc
 
 # ==========================================================
 # FIGURE 1
-# Accuracy
+# Accuracy vs Synthetic Training Ratio
 # ==========================================================
 
 plt.figure(figsize=(8, 5))
@@ -81,7 +77,7 @@ plt.legend()
 plt.tight_layout()
 
 plt.savefig(
-    FIGURES_DIR / "accuracy_vs_synthetic_ratio.png",
+    RESULTS_DIR / "accuracy_vs_synthetic_ratio.png",
     dpi=300
 )
 
@@ -115,7 +111,7 @@ plt.grid(True)
 plt.tight_layout()
 
 plt.savefig(
-    FIGURES_DIR / "domain_gap.png",
+    RESULTS_DIR / "domain_gap.png",
     dpi=300
 )
 
